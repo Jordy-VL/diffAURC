@@ -1,0 +1,233 @@
+%\title{Motivating selective classification for document classification} %\project
+%\maketitle
+\begin{center}{\noindent\Large\bf Defining Selective Multi-Class Classification}\end{center}
+
+\section{AURC definition}
+
+Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,1]$ for a $k$ class problem with a reject option, where $\Delta$ is a probability simplex. %assumes additional logit; theta form part
+
+\noindent Origin: \url{https://arxiv.org/pdf/1805.08206.pdf}
+
+\begin{align}
+    \operatorname{AURC}(f) := \mathbb{E}_{x \sim p_x} \left[  \frac{\mathbb{E}_{(\tilde{x},\tilde{y})\sim p_{xy}}[\ell([f(\tilde{x})]_{1:k},\tilde{y}) \mathbb{I}[f(\tilde{x})_{k+1} > f(x)_{k+1}]]}{\mathbb{E}_{\tilde{x}\sim p_{x}}[ \mathbb{I}[f(\tilde{x})_{k+1} > f(x)_{k+1}]]} \right] \\
+    \approx \frac{1}{n} \sum_{h=1}^n \frac{\frac{1}{n-1} \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{\frac{1}{n-1} \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}
+\end{align}
+
+\section{Example \AURC}
+
+
+\newpage
+
+\begin{center}{\noindent\Large\bf Motivating Selective Document Classification}\end{center}
+
+\begin{uuredbox}
+This version (18/09) has been stated in terms of the context and motivation, not yet as properly formulated definitions; bear with me on this :) 
+\end{uuredbox}
+
+\section{Context}
+
+Document classification (\DC) is a quintessential task in intelligent document processing workflows. In practice, it is characterized as a multi-class classification problem with typically high cardinality (100-500 mutually exclusive document types) \cite{vanlandeghem2023document}. Production-level \DC{} models operate in a high-accuracy regime (>80\%) and are expected to be both \textit{classification-calibrated} \cite[Definition 1]{ni2019calibration} (top-1 calibration \cite{naeini2015obtaining,guo2017calibration,vaicenavicius2019evaluating}) and \textit{rejection-calibrated} \cite[Definition 2]{ni2019calibration}. As the predicted document type dictates further processing of key information extraction (KIE), typically specified according to static formats (e.g., a receipt for expenditure specifies different information than a car collision form), this primary step in the pipeline is crucial. 
+
+%not SOTA though 
+
+\section{Motivation}
+
+There is a lot of interest in reducing overall risk while maintaining the highest possible target coverage in large multi-class classification problems. Naturally, rejecting low-confidence, uncertain samples for human intervention is preferred to trusting a classifier. 
+This is the target of interest, whereas we train our models with a differentiable objective (commonly cross-entropy loss $\ell_{\mathrm{CE}}$) that might not be aligned. \cite{geifman2017selective,geifman2018bias} point out that there is no consensus on the appropriate performance measure for scoring functions.
+In practice, the classes can be imbalanced and might have a higher associated misclassification cost, although users are not likely to quantify class-specific costs for a label set of high cardinality. %there is also a link with fairness, as some document types might be more privy to processing 
+An additional practical problem exists in finding an appropriate set of class-specific thresholds that overall minimizes the target risk and maximizes a high (>70\%) target coverage. 
+
+In the \DC{} task setting, it is more sensible to target low-risk levels, instead of targeting midpoint coverage rates. Therefore, I propose to research a surrogate loss function with additional control over the risk, incentivizing the model to prioritize the true rejection rate. 
+
+%TODO: formulate correctly as definitions 
+
+\section{Background}
+
+\subsection{Calibration}
+
+\todo[inline]{Further establish link/difference to calibration}
+
+
+\noindent \begin{uuyellowbox}[title=Top-1 calibration does not imply good failure prediction \cite{zhu2022rethinking}]
+
+    Consider two probabilistic classifiers, each providing max softmax probability (MSP) as the confidence scoring function (CSF).\newline
+
+    Classifier A: 90\% accuracy - varying MSP ranging from 0.8-1
+    
+    Classifier B: 92\% accuracy - MSP always 0.92\newline
+
+    Which classifier would you choose in practice (keeping in mind the goals of selective classification)?
+    
+\end{uuyellowbox}
+
+
+
+\subsection{Selective classification}
+
+It has been referred to as confidence ranking in the context of \textit{iid} misprediction classification or failure/error prediction \cite{jaeger2023a}. For a good overview, check the survey \cite{zhang2023survey}. 
+
+\noindent Popular \textbf{evaluation metrics} include:
+\begin{enumerate}
+    \item \AUROC{} (Area Under the ROC Curve)
+    \item \AURC{} (Area Under the Risk Coverage Curve) \citep{geifman2017selective,jaeger2023a} 
+    \item \EAURC{} (discounting accuracy and normalization) \citep{geifman2018bias}
+\end{enumerate}
+
+
+\noindent Similar to calibration research, there are \textbf{I. train-time} methods involving surrogate losses, architecture \& optimization extensions, and \textbf{II. training-free} methods.
+\todo[inline]{Add related work, \href{https://openreview.net/pdf?id=K1DdnjL6p7}{recent reference}}
+
+\noindent Important \textbf{theoretical result}:
+
+Impossibility of "separation-based" calibrated surrogates for multi-class classification \cite[Theorem 4]{ni2019calibration}, making it a must-read. If I understand it well enough, it posits that $\ell_{\mathrm{CE}}$ is the best available choice. 
+
+Another important related work \href{https://arxiv.org/pdf/2208.12084.pdf}{Calibrated Selective Classification} \cite{fisch2022calibrated} proposes a trainable objective for selective calibration based on MMCE \cite{kumar2018trainable} \footnote{There is \href{https://github.com/ajfisch/calibrated-selective-classification}{code}}.
+
+
+\subsection{Knowledge distillation}
+
+Teacher-student training involves soft labels, which AFAIK has not been investigated together with selective classification. Matthew suggested swapping out $\ell_{\mathrm{CE}}$ for a proposed surrogate (\Cref{sec:method}) while fine-tuning the teacher and/or student network. 
+Recent work \cite{galil2023what} showed that models trained with knowledge distillation demonstrated improved \AURC{}.
+
+
+\section{Method}\label{sec:method}
+
+\subsubsection{Prior methods}
+
+\cite{geifman2017selective,geifman2018bias} provides the seminal paper with a computationally heavy method (ad-hoc loss and architecture extension) to control coverage and risk at training time.
+%for training a neural network with three heads: a classification head, and auxiliary head, and one head to estimate the confidence of the classification decision.
+
+Regarding I. it is hard to establish a clear winning method (in terms of \AURC) over MSP, the literature has shown that differences are often not reproducible\footnote{\href{https://github.com/LayneH/SAT-selective-cls/issues/3\#issuecomment-1640151933}{Discussion} ongoing.} or not statistically significant \cite{jaeger2023a}.
+The current (II.) state-of-the-art \cite{lin2022scrib} treats it as a set-based prediction with a post-hoc multi-thresholding algorithm that reduces overall risk. They devised an algorithm based on coordinate ascent (check 1 variable, keep others fixed) with some efficiency optimization at the lower level of class-specific thresholding. 
+
+
+
+\todo[inline]{Describe the optimal solution with time/space complexity (Big-Oh) and naive implementation}
+
+\todo[inline]{Describe a baseline solution}
+
+% \subsection{Task description}
+
+% \subsection{Method contributions}
+
+% \begin{itemize}
+% \item 
+% \end{itemize}
+
+
+\section{Experiments}
+
+I have created a benchmark (compatible with HuggingFace) for \KD{} on \DC{}.
+
+
+\subsection{Selective Training Methods}
+
+For teacher fine-tuning, the following (I.) methods have been implemented: 
+
+\begin{enumerate}
+    \item $\ell_{\mathrm{CE}}$ baseline 
+    \item Confidence Ranking Loss \cite{moon2020confidence}
+    \item LogitNorm Loss \cite{wei2022mitigating}
+    \item Deep Gamblers Loss \cite{liu2019deep}
+    \item Symmetric Cross-Entropy \cite{wang2019symmetric}
+    \item Entropy Regularization \cite{feng2022stop} 
+    \item Self-adaptive Training \cite{huang2020self}
+    \item Intermediate Checkpointing \cite{wang2022efficient}
+\end{enumerate}
+
+Other interesting (II.) training-free methods to be investigated (\#TODO): 
+\begin{itemize}
+    \item DOCTOR \cite{granese2021doctor}
+    \item Gini \cite{gomes2023a}
+    \item SCRIBR \cite{lin2022scrib}
+\end{itemize}
+
+\subsection{Distillation Methods}
+
+Current \KD{} methods are supported: 
+\begin{itemize}
+\item  Response/logits-based
+\begin{enumerate}
+    \item Cross-entropy with KD hyperparameters ($\alpha$ and $\tau$) \cite{hinton2015distilling}
+    \item Mean Squared Error \cite{kim2021comparing}
+    \item NKD \cite{yang2023knowledge}
+    %\item Need something different for FasterRCNN
+    %\item (Hyperparameter grid search run for all)
+\end{enumerate}
+\item  Features-based
+\begin{enumerate}
+    \item Distillation on reconstructed feature maps (FitNet) - middle layer strategy \cite{romero2014fitnets}
+    \item SimKD with re-used teacher head \cite{SimKD} %Patch to patch distillation framework 
+    \item SimKD with [CLS] MLP projector variation
+    %\item Structural knowledge distillation
+\end{enumerate}
+\end{itemize}
+
+
+
+\subsection{Datasets}
+
+\begin{table}[ht]
+\centering
+\caption{Dataset usage for DIC and DLA tasks. 
+Symbols: P = pre-training, DP = document pre-training, T = teacher training, S = student training, * = subsampling , E = teacher/student evaluation.}
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Task} & \textbf{Usage} & \textbf{Size} & \textbf{\# Cls} \\ \hline
+ImageNet \cite{deng2009imagenet} & DIC & P & 1.28M & 1000 \\ \hline
+IIT-CDIP \cite{lewis2006building} & DIC & DP, T, S & 11M & / \\ \hline
+\tobacco{} \cite{kumar2013unsupervised} & DIC & T, S, E & 3482 & 10 \\ \hline
+\rvl{} \cite{harley2015evaluation} & DIC & DP, T, E, * & 400K & 16 \\ \hline
+RVL-CDIP-N \cite{larson2022evaluating} & DIC & E & 10K & 16 \\ \hline
+\hline
+\end{tabular}
+\label{tab:DKD-datasets}
+\end{table}
+
+For \DC{}, we benchmark results on both \tobacco{} (original train-val-test splits 800-200-2482) and \rvl.  
+We also created a subsampled student training set, \rvlone, by randomly selecting 1K training images per class from \rvl. The originally large training size hinders experimentation (longer iteration cycles).
+By evaluating the full \rvl{} test set, we provide a fair evaluation of the usefulness of KD methods, while avoiding the cumbersomeness of student fine-tuning on a large dataset. Additionally, we evaluate on RVL-CDIP-N, which is a test set created for testing robustness to covariate shifts.
+
+\todo[inline]{
+METHODOLOGY PROBLEM: no open-source data to test document classification with high label cardinality.
+An internal dataset is available.
+}
+
+
+
+\subsubsection{Preliminary results varying KD strategies - CE teacher}
+
+\begin{table*}
+\centering
+\caption{Preliminary results of different KD strategies benchmarked for Vit-B applied on the \rvl{} datasets. }
+\npdecimalsign{.}
+\nprounddigits{3}
+\begin{tabular}{|c|c|c|c|n{1}{3}n{1}{3}n{1}{3}|} %{|c|c|c|c||ccc|}  
+\hline Dataset & Teacher backbone & Student backbone & Method & \text{ACC} & \text{ECE} & \text{AURC}\\  \hline %$\triangle \mathrm{Acc}$
+\rvl & ViT-B & -- & Baseline & 0.891697292432311 &	0.047907298836262	& 0.017503164554713 \\
+& -- & ViT-S & Baseline &0.853371334283357 & 0.057859288371025 & 0.02963421682364 \\ %0.90844771119278 & 0.01186920564432 & 0.012508771541678 \\
+ & -- & ViT-T & Baseline &0.822045551138778 & 0.042795402533132 & 0.040342312570416 \\ \hline %0.900922523063077 & 0.016201313786121 & 0.014282554880225 \\
+\hline \rvlone  & ViT-B & \textbf{ViT-S} & Vanilla [$\tau=2.5, \alpha=0.5$] &0.85427135678392 & 0.048633268034969 & {\npboldmath}0.028376044015258 \\
+\hline \rvlone  & ViT-B &  & NKD [$\tau=1, \gamma=1.5$] &0.840471011775294 & 0.073632049497662 & 0.035729143933197 \\
+\hline \rvlone  & ViT-B &  & MSE &0.854996374909373 & 0.050951811632588 & {\npboldmath}0.028086462460537 \\
+\hline \rvlone  & ViT-B &  & SimKD [CLS+MLP]  & {\npboldmath}0.85947148678717 &	{\npboldmath}0.028154179258953 &	0.28744054887619
+ \\
+\hline \rvlone  & ViT-B &  & SimKD [CNN] & 0.846796169904247	&0.061565487248227	& 0.141136871882953
+ \\
+\hline \rvlone  & ViT-B &  & FitNet [middle] &0.842646066151654 & 0.140569373835247 & 0.047789833130271 \\
+\hline \rvlone  & ViT-B (ImageNet) & ViT-T & FitNet [middle] & 
+0.825895647391185	&0.056582912881468	& 0.155618612805129
+ \\
+\hline\hline \rvlone  & ViT-B & \textbf{ViT-T} & Vanilla [$\tau=2.5, \alpha=0.5$] &  0.824745618640466 & 0.057973819137046 & {\npboldmath}0.03840438493781 \\
+\hline \rvlone  & ViT-B &  & NKD [$\tau=1, \gamma=1.5$]& 0.815070376759419 & 0.093624998224256 & 0.045976107157128 \\
+\hline \rvlone  & ViT-B &  & MSE & 0.82329558238956 & 0.065716418501806 & 0.039916989542324 \\
+\hline \rvlone  & ViT-B &  & SimKD [CLS+MLP] & {\npboldmath}0.829745743643591 & 0.163239800045468 & 0.094989035012674 \\
+\hline \rvlone  & ViT-B &  & SimKD [CNN] & 0.829495737393435 & 0.149636502763522 & 0.055740155161562 \\
+\hline \rvlone  & ViT-B &  & FitNet [middle] & 0.812345308632716 & 0.153136880692877 & 0.050564425673713 \\
+\hline \rvlone  & ViT-B (ImageNet) & ViT-T & FitNet [middle] & 0.805370134253356	&{\npboldmath}0.05986580106555&	0.167935470434519
+ \\
+\hline
+\end{tabular}
+\end{table*}
+
+

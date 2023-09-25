@@ -1,0 +1,125 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Remove the "review" option to generate the final version.
+\usepackage[review]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+\usepackage{array}
+\newcolumntype{H}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{}}
+\usepackage{float}
+\usepackage[skip=5pt, belowskip=-10pt]{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[boldmath]{numprint}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\etal}{\textit{et al}.}
+\newcommand{\ie}{\textit{i}.\textit{e}.}
+\newcommand{\eg}{\textit{e}.\textit{g}.}
+\newcommand{\keypoint}[1]{\vspace{0.1cm}\noindent\textbf{#1}\quad}
+
+%terminology
+\newcommand{\KD}{\texttt{KD}}%
+\newcommand{\DC}{\texttt{DC}}%
+\newcommand{\DU}{\texttt{DU}}%
+
+%datasets
+\newcommand{\tobacco}{\textsl{Tobacco-3482}}
+\newcommand{\rvl}{\textsl{RVL-CDIP}}
+\newcommand{\rvlone}{\textsl{RVL-CDIP$_{1k}$}}
+\newcommand{\tablebank}{\textsl{TableBank}}
+\newcommand{\doclaynet}{\textsl{DocLayNet}}
+
+%metrics
+\newcommand{\AURC}{$\mathrm{AURC}$} 
+\newcommand{\AUROC}{$\mathrm{AUROC}$} 
+\newcommand{\ECE}{$\mathrm{ECE}$}
+\newcommand{\NLL}{$\mathrm{NLL}$}
+\newcommand{\BS}{$\mathrm{BS}$}
+\newcommand{\EAURC}{$\mathrm{E-AURC}$}
+
+% \newcommand{\jordyskeleton}[1]{\textcolor{blue}{#1}}
+% \newcommand{\biswascolor}[1]{\textcolor{violet}{#1}}
+\newcommand{\commentout}[1]{\ignorespaces}
+
+\usepackage{xargs}  % Use more than one optional parameter in new command
+\usepackage[colorinlistoftodos,prependcaption]{todonotes} %,textsize=tiny
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{ForestGreen}{RGB}{34,139,34}
+\colorlet{darkgreen}{green!60!black!80!}
+\colorlet{darkorange}{orange!60!black!80!}
+\colorlet{purple}{red!80!green!20!blue!60!}
+\newcommandx{\draft}[2][1=]{\todo[linecolor=ForestGreen,backgroundcolor=ForestGreen!25,bordercolor=ForestGreen,inline,caption={},#1]{#2}}
+\newcommandx{\evidence}[2][1=]{\todo[linecolor=darkorange,backgroundcolor=darkorange!25,bordercolor=darkorange!75,inline,#1,noprepend,caption={}]{\small #2}}
+\newcommandx{\issue}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\counterclaim}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,inline,caption={},#1]{#2}}
+\newcommandx{\exactcopy}[2][1=]{\todo[linecolor=darkorange,backgroundcolor=darkorange!25,bordercolor=darkorange!50,inline,#1,noprepend,caption={}]{\small #2}}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{most}
+\tcbset{coltitle=black,fonttitle=\bfseries\small\scshape,fontlower=\scriptsize,before=\par\vspace{2pt},
+    after=\par\vspace{0pt}, size=fbox
+}
+\newenvironment{uuredbox}[1][]%
+{\begin{tcolorbox}[colback=red!15,colframe=red,coltitle=white,#1]}%
+{\end{tcolorbox}}
+\newenvironment{uugreenbox}[1][]%
+{\begin{tcolorbox}[colback=green!35,colframe=gronskastark,#1]}%
+{\end{tcolorbox}}
+\newenvironment{uuyellowbox}[1][]%
+{\begin{tcolorbox}[colback=yellow!40,colframe=yellow!80,#1]}%
+{\end{tcolorbox}}
+\newenvironment{uubluebox}[1][]%
+{\begin{tcolorbox}[colback=blue!25,colframe=gryningstark,#1]}%
+{\end{tcolorbox}}
+\newenvironment{uugraybox}[1][]%
+{\begin{tcolorbox}[colback=uulightgrey,colframe=uudarkgrey,coltitle=white,#1]}%
+{\end{tcolorbox}}
+
+
+\newcommand{\rev}[1]{{#1}} %\textcolor{purple}
+
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+\crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Tab.}{Tabs.}
+
+\begin{document}
+\input{draft}
+\newpage
+%https://flamingtempura.github.io/bibtex-tidy/index.html?opt=%7B%22modify%22%3Atrue%2C%22curly%22%3Atrue%2C%22numeric%22%3Atrue%2C%22months%22%3Afalse%2C%22space%22%3A2%2C%22tab%22%3Atrue%2C%22align%22%3A13%2C%22sort%22%3A%5B%22author%22%2C%22year%22%2C%22key%22%5D%2C%22duplicates%22%3A%5B%22key%22%5D%2C%22stripEnclosingBraces%22%3Afalse%2C%22dropAllCaps%22%3Afalse%2C%22escape%22%3Afalse%2C%22sortFields%22%3A%5B%22author%22%2C%22year%22%2C%22month%22%2C%22day%22%2C%22title%22%2C%22shorttitle%22%2C%22journal%22%2C%22booktitle%22%2C%22location%22%2C%22on%22%2C%22publisher%22%2C%22address%22%2C%22series%22%2C%22volume%22%2C%22number%22%2C%22pages%22%2C%22doi%22%2C%22isbn%22%2C%22issn%22%2C%22url%22%2C%22urldate%22%2C%22copyright%22%2C%22category%22%2C%22note%22%2C%22metadata%22%5D%2C%22stripComments%22%3Afalse%2C%22trailingCommas%22%3Afalse%2C%22encodeUrls%22%3Atrue%2C%22tidyComments%22%3Atrue%2C%22removeEmptyFields%22%3Atrue%2C%22removeDuplicateFields%22%3Atrue%2C%22lowercase%22%3Atrue%2C%22backup%22%3Atrue%7D
+\bibliographystyle{acl_natbib}
+\bibliography{main}
+
+\end{document}
