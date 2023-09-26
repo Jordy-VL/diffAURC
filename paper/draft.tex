@@ -201,7 +201,7 @@ RVL-CDIP-N \cite{larson2022evaluating} & DIC & E & 10K & 16 \\ \hline
 
 For \DC{}, we benchmark results on both \tobacco{} (original train-val-test splits 800-200-2482) and \rvl.  
 We also created a subsampled student training set, \rvlone, by randomly selecting 1K training images per class from \rvl. The originally large training size hinders experimentation (longer iteration cycles).
-By evaluating the full \rvl{} test set, we provide a fair evaluation of the usefulness of KD methods, while avoiding the cumbersomeness of student fine-tuning on a large dataset. Additionally, we evaluate on RVL-CDIP-N, which is a test set created for testing robustness to covariate shifts.
+By evaluating the full \rvl{} test set, we provide a fair evaluation of the usefulness of KD methods, while avoiding the cumbersomeness of student fine-tuning on a large dataset. Additionally, we evaluate RVL-CDIP-N, which is a test set created for testing robustness to covariate shifts.
 
 \todo[inline]{
 METHODOLOGY PROBLEM: no open-source data to test document classification with high label cardinality.
