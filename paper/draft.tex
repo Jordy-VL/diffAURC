@@ -13,7 +13,23 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
     \approx \frac{1}{n} \sum_{h=1}^n \frac{\frac{1}{n-1} \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{\frac{1}{n-1} \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}
 \end{align}
 
-\section{Example \AURC}
+\section*{Updates 27/09}
+
+\begin{itemize} %tailor to audience
+    \item $f(x)_{k+1}$: write out with $g$, as it is restrictive to have this additional output in $[0,1]$, can be in $\mathbb{R}$; can have its own parameters and features
+    \item Sanity check complete
+    \item Differentiability: 1) indicator function, 2) comparison (>)
+\end{itemize}
+
+% \section{Example \AURC}
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{figures/aurc_example.png}
+%     \caption{Example of \AURC{} calculation for a 3-class problem with a reject option.}
+%     \label{fig:aurc_example}
+% \end{figure}
+
 
 
 \newpage
