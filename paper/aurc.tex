@@ -1,0 +1,102 @@
+\begin{center}{\noindent\Large\bf Details on AURC}\end{center}
+
+\section{Standard Definition of Selective Classification} %g is independent of model parameters w
+
+Given a data set $\left\{\left(x_i, y_i\right)\right\}_{i=1}^N$ of size $N$ with $\left(x_i, y_i\right)$ independent samples from $\mathcal{X} \times \mathcal{Y}$, and given a pair of functions $(f, g)$, where $g: \mathcal{X} \rightarrow \mathbb{R}$ is a confidence scoring function (CSF) and $f(\cdot): \mathcal{X} \rightarrow \mathcal{Y}$ is the classifier, the classification output after failure detection is defined as:
+$$
+    (f, g)(x):=\left\{\begin{array}{ll}
+        f\left(x\right),  & \text { if } g(x) \geq \tau \\
+        \text { filter, } & \text { otherwise }
+    \end{array}\right.
+$$
+Filtering ("detection") is triggered when $g(x)$ falls below a threshold $\tau \in \mathbb{R}$.
+In order to perform \textit{meaningful} failure detection, a CSF $g(x)$ is required to output high confidence scores for correct predictions and low confidence scores for 'wrong' predictions based on the binary failure label
+$$
+    y_{\mathrm{w}}(x)=\mathbb{I}\left[y \neq \hat{y}\right],
+$$
+where for convenience, $f_{k}(x)$ denotes the $k$-th element of the output vector, thus $\hat{y}=\operatorname{argmax}_{y' \in \mathcal{Y}} f_{y'}(x)$ and $\mathbb{I}$ is the identity function (1 for true events and 0 for false events).
+
+
+\begin{definition}[Confidence Scoring Function (CSF)]
+    Any function whose continuous output \textit{aims to} separate a model's failures from correct predictions can be interpreted as a confidence scoring function. \cite{jaeger2023a}.
+    \begin{equation}
+        g(x) \in \mathbb{R} \text { s.t. } \left\{\begin{array}{ll}
+            g(x) \geq \tau, & \text { if } y_{\mathrm{w}}(x)=0 \\
+            g(x) < \tau,    & \text { if } y_{\mathrm{w}}(x)=1
+        \end{array}\right.
+    \end{equation}
+\end{definition}
+
+The goal of the CSF is to induce a partial order over points in $\mathcal{X}$, with optimally reflecting true loss monotonicity in the sense that for every two labeled instances $\left(x_1, y_1\right) \sim P(X, Y)$, and $\left(x_2, y_2\right) \sim P(X, Y)$,
+$$
+    g\left(x_1, \hat{y} \mid f\right) \leq g\left(x_2, \hat{y} \mid f\right) \Longleftrightarrow \operatorname{Pr}_P\left[\hat{y}_w\left(x_1\right) \neq y_1\right] \geq \operatorname{Pr}_P\left[\hat{y}_w\left(x_2\right) \neq y_2\right]
+$$
+%the confidence of 1 is lower than 2 if if the probability of failure of 1 is higher than 2; where failure is indicated by the true probability of the failure label $y_{\mathrm{w}}(x)=\mathbb{I}\left[y \neq \hat{y}\right]$.
+
+\noindent Common CSFs used in practice \footnote{While it is preferable to have the output domain of g in $[0,1]$ for easier finding of selection thresholds, this is not a strict requirement.} are:
+\begin{enumerate}
+    \item Maximum softmax probability (MSP): $g(x) = \max_{y' \in \mathcal{Y}} f_{y'}(x)$
+    \item Maximum logit (MaxLogit): $g(x) = \max_{y' \in \mathcal{Y}} z_{y'}(x)$, with \textit{logits} $\mathbf{z} \in \mathbb{R}^K$
+    \item Entropy: $g(x) = -\sum_{y' \in \mathcal{Y}} f_{y'}(x) \log f_{y'}(x)$
+    \item Distance-based measures (e.g., \cite{fisch2022calibrated})
+          \begin{itemize}
+              \item kNN distance. A 1D outlier score derived from the average distance of $x$ to its $k$ nearest neighbors in the training distribution
+          \end{itemize}
+          % \item Mutual information (MI): $g(x) = \sum_{y' \in \mathcal{Y}} f_{y'}(x) \log \frac{f_{y'}(x)}{p(y')}$, where $p(y')$ is the prior probability of class $y'$
+          % \item Predictive entropy (PE): $g(x) = -\sum_{y' \in \mathcal{Y}} f_{y'}(x) \log \sum_{y'' \in \mathcal{Y}} f_{y''}(x)$
+          % \item Predictive entropy reduction (PER): $g(x) = \sum_{y' \in \mathcal{Y}} f_{y'}(x) \log \frac{f_{y'}(x)}{\sum_{y'' \in \mathcal{Y}} f_{y''}(x)}$
+          % \item Distance to decision boundary (D2B): $g(x) = \frac{1}{\norm{\mathbf{w}}_2} \left(\mathbf{w}^T \mathbf{x} + b\right)$, where $\mathbf{w}$ and $b$ are the weights and bias of the last layer of the NN
+          %https://github.com/ajfisch/calibrated-selective-classification/blob/main/src/data/features.py 
+\end{enumerate}
+
+While it is preferable to have the output domain of g in $[0,1]$ for easier finding of selection thresholds, it is not a strict requirement.
+
+\section*{Jordy's AURC}
+
+A crucial component in making a multi-class classifier $f$ selective is the selector function $g$, which originally defined as a CSF, requires a threshold $\tau$ to be defined in order to perform filtering. The threshold $\tau$ is usually defined as a fixed value, or as a function of the confidence score distribution of the training set.
+With the objective of measuring a classifier's selective performance, we need to establish risk and coverage measures that are dependent on the threshold $\tau$.
+
+\begin{definition}[Coverage]
+    The coverage of a selective classifier $f$ with selector $g$ and threshold $\tau$ is defined as the expectation of selecting from a distribution.
+    \begin{equation}
+        \mathcal{C}_{\tau}(f, g)=\mathbb{E}_{P_X}\left[g(x) \geq \tau\right]
+    \end{equation}
+    Put plainly: the percentage of samples above the threshold %n_samples_above_threshold / n_samples
+    % probability mass of the non-rejected region in \mathcal{X} 
+\end{definition}
+
+\begin{definition}[Risk]
+    The risk of a selective classifier $f$ with selector $g$ and threshold $\tau$ is defined as the expected loss of the classifier on the filtered distribution
+    %$\mathcal{D}_{\text {in }}^{\text {test }, \times}$, i.e. the expected loss of the classifier on the set of misclassified in-distribution test samples.
+    \begin{equation}
+        \mathcal{R}_{\tau}(f, g)=\frac{\mathbb{E}_{P_{XY}}\left[\ell\left(y, f(x)\right) \mathbb{I}\left[g(x) \geq \tau\right]  \right]}{\mathcal{C}_{\tau}(f, g)} %
+    \end{equation}
+    Put plainly: the percentage of errors above the threshold %residuals / n_samples
+\end{definition}
+
+To estimate the area under the risk-coverage curve \AURC{}, a multi-threshold list $\theta_T$ with length $T$ is obtained as the unique values of the ascending ranking of all CSF values $g(X)$. The $\mathrm{AUC}$ is then approximated by the sum of the areas of the trapezoids defined by the points $(\mathcal{C}_{\tau}(f, g), \mathcal{R}_{\tau}(f, g))$ for all thresholds $\tau \in \theta_T$.
+
+%Starting point is risk=1-accuracy, coverage=100\%; Ending point= coverage=0\%, risk=0\%.
+
+
+%(measured on a given distribution, e.g., the validation set)
+
+\section{End-to-End example of AURC}
+
+%Despite its relevance for application, the often final step of failure detection, i.e. the definition of a decision threshold on the confidence score, is often neglected in research. In Appendix D we present an approach that does not require the calibration of scores; optimize coverage, relative to maximal risk
+
+%\section{Detail on integration for AURC}
+
+
+\section*{Why AURC?}
+
+Using AURC as a primary evaluation metric has the following advantages \cite{ding2020revisiting}.
+\begin{enumerate}
+    \item when the underlying prediction models are the same, AURC is an effective quality metric to indicate the performance of selective prediction
+    \item  when the prediction models are different, which happens a lot in the literature due to the emerging trend of uncertainty-aware training (or swapping out loss functions), using AURC instead of AUPR and AUROC prevents unfair and potential misleading comparison.
+    \item AURC can be generalized to distinct tasks with task-specific evaluation metrics ($\ell(y,f(x))$) while AUPR and AUROC cannot.
+    \item AURC is an alternative optimization objective to directly maximize the performance of selective prediction and helps to avoid weighing multiple objective terms in related work
+    \item AURC directly shows the cost-performance trade-off in selective prediction which is not visible in the conventional ROC curve or PR curve.
+\end{enumerate}
+
+\newpage

@@ -231,3 +231,24 @@ An internal dataset is available.
 \end{table*}
 
 
+% Considering standard Neural Networks (NNs), the last layer outputs a vector of real-valued \textit{logits} $\mathbf{z} \in \mathbb{R}^K$, which in turn are normalized using a sigmoid/softmax activation function.
+
+% $\displaystyle \sigma(z) = \frac{1}{1 + \exp^{-z}}$
+% $\displaystyle \text{softmax}(\mathbf{z}) = \frac{{\exp(z)}}{{\sum_{k=1}^{K} \exp(z_k)}}$
+
+% For convenience, $f_{k}(x)$ denotes the $k$-th element of the output vector.
+
+% $\hat{y} = \argmax_{y'\in{\mathcal{Y}}}f_{y'}(X)$ is the top-1 class prediction
+
+% $\hat{p}= \max_{y'\in{\mathcal{Y}}}f_{y '}(X)$ is the associated posterior probability
+% Some interesting distributions are defined:
+
+% \begin{itemize}
+%     \item $\mathcal{D}_{\text {in }}$ denotes the distribution over $\mathcal{X}$ of in-distribution (ID) data
+%     \item 	 $\mathcal{D}_{\text {in }}^{\text {test }, \checkmark}$ and $\mathcal{D}_{\text {in }}^{\text {test }, \times}$ represent the distribution of correct and misclassified ID test samples
+% \end{itemize}
+
+% Now to combine these two measures into a single metric, we need to define a trade-off between risk and coverage. This is done by defining a \textit{cost} function $c(\cdot)$, which is a function of the risk and coverage. The cost function is defined as the weighted sum of the risk and coverage, where the weights are defined by the user. The cost function is defined as:
+% \begin{equation}
+%     c(\mathcal{R}_{\tau}(f, g), \mathcal{C}_{\tau}(f, g))=\alpha \mathcal{R}_{\tau}(f, g)+(1-\alpha) \mathcal{C}_{\tau}(f, g)
+% where $\alpha \in[0,1]$ is a user-defined parameter that controls the trade-off between risk and coverage. The cost function is a function of the threshold $\tau$ and the selector $g$.

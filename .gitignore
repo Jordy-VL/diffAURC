@@ -1,0 +1,44 @@
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+resources/
+src/resources/
+src/data/preprocessing/
+
+OCRidlmain.bib
+main.aux
+main.bbl
+main.blg
+main.brf
+main.log
+main.out
+main.pdf
+main.synctex.gz
+related-work/
+src/baselines/.ipynb_checkpoints/
+.ipynb_checkpoints/
+
+
+#*.npz
+nohup.out
+src/data/.~lock.mckinsey.csv#
