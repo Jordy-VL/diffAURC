@@ -16,10 +16,16 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
 \section*{Updates 27/09}
 
 \begin{itemize} %tailor to audience
-\item $f(x)_{k+1}$: written as $g$, as it is restrictive to have this additional output in $[0,1]$, can be in $\mathbb{R}$; can have its own parameters (e.g., MLP) with features derived from any intermediate representation of $x$
-\item Sanity check complete: naive and matrix version
+    \item $f(x)_{k+1}$: written as $g$, as it is restrictive to have this additional output in $[0,1]$, can be in $\mathbb{R}$; can have its own parameters (e.g., MLP) with features derived from any intermediate representation of $x$
+    \item Different AURC implementations (Geifman vs. Jaeger)
+    \item Sanity check complete: naive version with approximation
     \item Differentiability: 1) indicator function, 2) comparison (>)
 \end{itemize}
+
+\begin{todolist}
+\item Vectorized implementation of Definition 2
+\end{todolist}
+
 % \section{Example \AURC}
 
 % \begin{figure}[H]

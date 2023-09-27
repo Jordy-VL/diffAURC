@@ -117,7 +117,10 @@
 \newenvironment{uugraybox}[1][]%
 {\begin{tcolorbox}[colback=uulightgrey,colframe=uudarkgrey,coltitle=white,#1]}%
 {\end{tcolorbox}}
- 
+
+ \usepackage{enumitem,amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
 
 \newcommand{\rev}[1]{{#1}} %\textcolor{purple}
 
