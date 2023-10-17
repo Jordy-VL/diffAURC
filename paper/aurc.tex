@@ -37,7 +37,7 @@ $$
 \begin{enumerate}
     \item Maximum softmax probability (MSP): $g(x) = \max_{y' \in \mathcal{Y}} f_{y'}(x)$
     \item Maximum logit (MaxLogit): $g(x) = \max_{y' \in \mathcal{Y}} z_{y'}(x)$, with \textit{logits} $\mathbf{z} \in \mathbb{R}^K$
-    \item Entropy: $g(x) = -\sum_{y' \in \mathcal{Y}} f_{y'}(x) \log f_{y'}(x)$
+    \item Negative entropy: $g(x) = -\sum_{y' \in \mathcal{Y}} f_{y'}(x) \log f_{y'}(x)$
     \item Distance-based measures (e.g., \cite{fisch2022calibrated})
           \begin{itemize}
               \item kNN distance. A 1D outlier score derived from the average distance of $x$ to its $k$ nearest neighbors in the training distribution
@@ -48,8 +48,6 @@ $$
           % \item Distance to decision boundary (D2B): $g(x) = \frac{1}{\norm{\mathbf{w}}_2} \left(\mathbf{w}^T \mathbf{x} + b\right)$, where $\mathbf{w}$ and $b$ are the weights and bias of the last layer of the NN
           %https://github.com/ajfisch/calibrated-selective-classification/blob/main/src/data/features.py 
 \end{enumerate}
-
-While it is preferable to have the output domain of g in $[0,1]$ for easier finding of selection thresholds, it is not a strict requirement.
 
 \section*{Jordy's AURC}
 

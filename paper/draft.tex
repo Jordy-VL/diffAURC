@@ -10,8 +10,21 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
 
 \begin{align}
     \operatorname{AURC}(f) := \mathbb{E}_{x \sim p_x} \left[  \frac{\mathbb{E}_{(\tilde{x},\tilde{y})\sim p_{xy}}[\ell([f(\tilde{x})]_{1:k},\tilde{y}) \mathbb{I}[f(\tilde{x})_{k+1} > f(x)_{k+1}]]}{\mathbb{E}_{\tilde{x}\sim p_{x}}[ \mathbb{I}[f(\tilde{x})_{k+1} > f(x)_{k+1}]]} \right] \\
-    \approx \frac{1}{n} \sum_{h=1}^n \frac{\frac{1}{n-1} \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{\frac{1}{n-1} \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}
+    \approx \frac{1}{n} \sum_{h=1}^n \frac{\frac{1}{n-1} \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{\frac{1}{n-1} \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]} := \widehat{\mathrm{AURC}}(f) \\
+   =\frac{1}{n} \sum_{h=1}^n \frac{ \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{ \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]} = \frac{1}{n} \sum_{i=1}^n \alpha_i \ell([f(x_i)]_{1:k},y_i)
 \end{align}
+
+What is the formula for $\alpha_i$?  $\mathcal{O}(n)$ algorithm for computing all $\alpha_i$ given an index $\{\pi_i\}_{1\leq i\leq n}$ that sorts $\{f(x_i)_{k+1}\}_{1\leq i \leq n}$?
+
+
+J: Informally, $\alpha_i$ should be a value between 1 and n-1, denoting the number of instances that have higher estimated confidence than  $f(x_i)_{k+1}$.
+
+
+%loss per h, multiplied by a value between 1 and N-1; linear in terms of the loss
+%linear coefficients with respect to some alpha; alpha is a scalar
+%calculate alphas faster than $O(N^2)$$?
+%sort $(O(NlogN)$ and thresholding $O(N)$ 
+%sort by k+1
 
 \section*{Updates 27/09}
 
@@ -24,6 +37,7 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
 
 \begin{todolist}
 \item Vectorized implementation of Definition 2
+\item Write out alphas like weights (impl) in Definition 3
 \end{todolist}
 
 % \section{Example \AURC}
