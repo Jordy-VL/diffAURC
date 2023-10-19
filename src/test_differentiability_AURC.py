@@ -10,6 +10,7 @@ from AURC_implementations import IMPLEMENTATIONS, runtime_wrapper
 
 ##### data generation for testing #####
 
+
 def generate_random_data():
     num_samples = 10
     p_test = np.random.rand(num_samples, 3)
@@ -72,6 +73,44 @@ def load_CIFAR_logits(path="../data/resnet110_c10_logits.p"):
     return (p_val, y_val), (p_test, y_test)
 
 
+def test_all_options(p_test, y_test):
+    # all options: g, loss function, metric implementations
+    loss_function = torch.nn.CrossEntropyLoss()
+    for CSF, g in CSF_dict.items():
+        if "_np" in CSF:
+            continue
+        loss_fx = AURCLoss(g=g, loss_function=loss_function)
+        loss = loss_fx(p_test, y_test)
+        loss.backward()
+        # print(p_test.grad)
+
+        # test metrics vs. loss function
+        for _, impl in IMPLEMENTATIONS:
+            if args.N > 1000 and impl.__name__ == "naive":
+                continue
+            g = CSF_dict[CSF + "_np"]
+            v, t = runtime_wrapper(impl, p_test.detach().numpy(), g, y_test.numpy())
+            print(f"{CSF}: loss: {loss.item()} vs. {impl.__name__}: {v} taking {round(t,4)}s")
+
+
+def test_consistency(p_test, y_test):
+    def batch(iterable, n=1):
+        length = len(iterable)
+        for ndx in range(0, length, n):
+            yield iterable[ndx : min(ndx + n, length)]
+
+    # random batching with different N
+    for Ns in [2, 10, 20, 50, 100, 1000, 2500]:
+        p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
+        batched_loss = sum(
+            [AURCLoss()(p_test_batch, y_test_batch) for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+        )
+        print(f"Batched: N={Ns}, loss: {batched_loss.item()}")
+    # full
+    loss_fx = AURCLoss()
+    loss = loss_fx(p_test, y_test)
+    print(f"Population: loss: {loss.item()}")
+
 
 if __name__ == "__main__":
     # add argparse for N and K
@@ -94,26 +133,12 @@ if __name__ == "__main__":
     else:
         p_test, y_test = generate_random_data_with_confidence(N=args.N, K=args.K, concentration=1, onehot=False)
 
-    #baseline accuracy
+    # baseline accuracy
     print(f"baseline accuracy: {np.mean(p_test.argmax(-1) == y_test)}")
-    
+
     p_test = torch.from_numpy(p_test).requires_grad_()
     y_test = torch.from_numpy(y_test)
-
-    # all options: g, loss function, metric implementations
-    loss_function = torch.nn.CrossEntropyLoss()
-    for CSF, g in CSF_dict.items():
-        if "_np" in CSF:
-            continue
-        loss_fx = AURCLoss(g=g, loss_function=loss_function)
-        loss = loss_fx(p_test, y_test)
-        loss.backward()
-        # print(p_test.grad)
-
-        # test metrics vs. loss function
-        for _, impl in IMPLEMENTATIONS:
-            if args.N > 1000 and impl.__name__ == "naive":
-                continue
-            g = CSF_dict[CSF + "_np"]
-            v, t = runtime_wrapper(impl, p_test.detach().numpy(), g, y_test.numpy())
-            print(f"{CSF}: loss: {loss.item()} vs. {impl.__name__}: {v} taking {round(t,4)}s")
+    
+    test_consistency(p_test, y_test)
+    
+    test_all_options(p_test, y_test)
