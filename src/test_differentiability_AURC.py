@@ -9,7 +9,7 @@ from AURC_loss import AURCLoss, CSF_dict
 from AURC_implementations import IMPLEMENTATIONS, runtime_wrapper
 
 ##### data generation for testing #####
-
+np.random.seed(42)
 
 def generate_random_data():
     num_samples = 10
@@ -85,8 +85,8 @@ def test_all_options(p_test, y_test):
         # print(p_test.grad)
 
         # test metrics vs. loss function
-        for _, impl in IMPLEMENTATIONS:
-            if args.N > 1000 and impl.__name__ == "naive":
+        for key, impl in IMPLEMENTATIONS:
+            if args.N > 1000 and key == "naive":
                 continue
             g = CSF_dict[CSF + "_np"]
             v, t = runtime_wrapper(impl, p_test.detach().numpy(), g, y_test.numpy())
@@ -100,10 +100,10 @@ def test_consistency(p_test, y_test):
             yield iterable[ndx : min(ndx + n, length)]
 
     # random batching with different N
-    for Ns in [2, 10, 20, 50, 100, 1000, 2500]:
+    for Ns in [2, 10, 20, 50, 100, 1000, 2500, 5000]:
         p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
-        batched_loss = sum(
-            [AURCLoss()(p_test_batch, y_test_batch) for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+        batched_loss = np.mean(
+            [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
         )
         print(f"Batched: N={Ns}, loss: {batched_loss.item()}")
     # full
