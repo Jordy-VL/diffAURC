@@ -30,15 +30,16 @@ def AURC_naive(f_X, g, Y):
             den += indicator  # empirical coverage for h vs. i
 
         if den == 0:  # no coverage, no risk?
-            # print('Comparison for h={} has 0 denominator'.format(h)) #which means it is max?
             continue
         outer_sum += num / den  # empirical risk for h vs. all i
     return outer_sum / N  # , risks, coverages
 
 
-def AURC_naive_alphas(f_X, g, Y):
+def AURC_naive_alphas_ON2(f_X, g, Y):
     N = len(Y)
     indices_sorted = np.argsort(g(f_X))
+    
+    #assume all are sorted
     sorted_f_X = f_X[indices_sorted]
     sorted_y = Y[indices_sorted]
     losses = sorted_f_X.argmax(-1) != sorted_y
@@ -47,7 +48,18 @@ def AURC_naive_alphas(f_X, g, Y):
     for i in range(N - 1):
         loss_sum = np.sum(losses[i+1:])
         final_sum += loss_sum / (N - i - 1)
+    return final_sum / N
 
+def AURC_naive_alphas_ON(f_X, g, Y):
+    N = len(Y)
+    indices_sorted = np.argsort(-g(f_X)) #descending sort
+    sorted_f_X = f_X[indices_sorted]
+    sorted_y = Y[indices_sorted]
+    final_sum = 0
+    partial_loss = int(sorted_f_X[0].argmax(-1) != sorted_y[0]) # init by largest
+    for i in range(1, N):
+        final_sum += partial_loss / i
+        partial_loss += int(sorted_f_X[i].argmax(-1) != sorted_y[i])
     return final_sum / N
 
 
@@ -56,5 +68,7 @@ if __name__ == '__main__':
     p_simp, y_simp = generate_random_data()
     naive = AURC_naive(p_simp, g, y_simp)
     print(naive)
-    naive_alphas = AURC_naive_alphas(p_simp, g, y_simp)
+    naive_alphas = AURC_naive_alphas_ON2(p_simp, g, y_simp)
+    print(naive_alphas)
+    naive_alphas = AURC_naive_alphas_ON(p_simp, g, y_simp)
     print(naive_alphas)
