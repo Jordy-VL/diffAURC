@@ -14,11 +14,43 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
    =\frac{1}{n} \sum_{h=1}^n \frac{ \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{ \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]} = \frac{1}{n} \sum_{i=1}^n \alpha_i \ell([f(x_i)]_{1:k},y_i)
 \end{align}
 
-What is the formula for $\alpha_i$?  $\mathcal{O}(n)$ algorithm for computing all $\alpha_i$ given an index $\{\pi_i\}_{1\leq i\leq n}$ that sorts $\{f(x_i)_{k+1}\}_{1\leq i \leq n}$?
+What is the formula for $\alpha_i$? \\
+$\mathcal{O}(n)$ algorithm for computing all $\alpha_i$ given an index $\{\pi_i\}_{1\leq i\leq n}$ that sorts $\{f(x_i)_{k+1}\}_{1\leq i \leq n}$?
 
 
-J: Informally, $\alpha_i$ should be a value between 1 and n-1, denoting the number of instances that have higher estimated confidence than  $f(x_i)_{k+1}$.
+\begin{align} % number of samples in between each unique integration point
+    \mathcal{C}_j = %
+    \frac{1}{n-1} 
+    \sum_{\substack{h=1 \\ j \neq h}}^n \mathbb{I}[f(x_h)_{k+1} > f(x_j)_{k+1}] \\ %higher CSF than point j
+    \alpha_i =  \mathcal{C}_{\pi_i} - \mathcal{C}_{\pi_{i+1}}     
+\end{align}
 
+\begin{align}
+    \frac{1}{n} \sum_{i=1}^{n-1} \frac{\sum_{j=i+1}^n\ell([f(x_{i:n})]_{1:k},y_j)}{(n-i)}
+\end{align}
+
+\begin{exmp}[simple]\hspace{0.1cm}
+    
+    $f(X)_{k+1}$ = [5, 2, 4]
+
+    $\ell([f(X)]_{1:k}, Y)$ = [0, 1, 0] 
+
+    $\pi$ = [1,2,0]
+
+    
+    
+    
+\end{exmp}
+
+
+\section*{Updates 18/10}
+
+J: as it is implemented in \cite{jaeger2023a}, the alphas/weights denote the number of instances between each contiguous pair of thresholds (in our case based on $f(X)_{k+1}$). 
+If we consider each individual confidence estimate as an integration point, the stepsize between them (i.e. alpha) will be a constant $1/N$. 
+
+%WRONG: J: Informally, $\alpha_i$ should be a value between 1 and n-1, denoting the number of instances that have higher estimated confidence than  $f(x_i)_{k+1}$. 
+%The most efficient way to obtain is by sorting $f(X)_{k+1}$ in ascending order ( O(nlogn) average case with comparison-based sort such as timsort [default in Python]), then iterate. 
+%https://stackoverflow.com/questions/13603042/what-is-the-fastest-way-to-get-a-sorted-unique-list-in-python
 
 %loss per h, multiplied by a value between 1 and N-1; linear in terms of the loss
 %linear coefficients with respect to some alpha; alpha is a scalar
@@ -39,6 +71,12 @@ J: Informally, $\alpha_i$ should be a value between 1 and n-1, denoting the numb
 \item Vectorized implementation of Definition 2
 \item Write out alphas like weights (impl) in Definition 3
 \end{todolist}
+
+\section*{Updates }
+
+\subsection{Literature review on differentiable \AURC}
+
+\cite{cao2022generalizing} close in spirit, dependent on cost, similarly defines it as a $K+1$ classification problem. 
 
 % \section{Example \AURC}
 
