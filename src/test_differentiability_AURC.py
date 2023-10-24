@@ -108,7 +108,7 @@ def test_consistency(p_test, y_test):
     for Ns in NN:
         collection[Ns] = []
         std_errors[Ns] = []
-        for seed in NN + list(range(20000, 20200)):
+        for seed in NN + list(range(20000, 2020)):
             permutation = np.random.RandomState(seed=seed).permutation(len(y_test))
             p_test_bs, y_test_bs = p_test[permutation], y_test[permutation]
             p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
@@ -118,11 +118,10 @@ def test_consistency(p_test, y_test):
             collection[Ns].append(batched_loss)
             std_errors[Ns].append(np.std(batched_losses) / np.sqrt(len(batched_losses)))
             
-        collection[Ns] = np.mean(collection[Ns])
         std_errors[Ns] = np.mean(std_errors[Ns]) #average std error over seeds
+        collection[Ns] = np.mean(collection[Ns])
         
         print(f"Batched: N={Ns}, loss: {collection[Ns]}, std: {std_errors[Ns]}")
-        
         
     # full
     loss_fx = AURCLoss()
@@ -132,7 +131,6 @@ def test_consistency(p_test, y_test):
     print(f"Population: loss: {loss.item()}")
     
     #plot collection over Ns (with std errors) in plotly
-    
     import plotly.graph_objects as go
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=list(collection.keys()), y=list(collection.values()), name="Batched",  error_y=dict(type='data', array=list(std_errors.values()), visible=True)))
