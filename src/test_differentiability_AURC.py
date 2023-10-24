@@ -9,7 +9,7 @@ from AURC_loss import AURCLoss, CSF_dict
 from AURC_implementations import IMPLEMENTATIONS, runtime_wrapper
 
 ##### data generation for testing #####
-np.random.seed(42)
+
 
 def generate_random_data():
     num_samples = 10
@@ -99,18 +99,51 @@ def test_consistency(p_test, y_test):
         for ndx in range(0, length, n):
             yield iterable[ndx : min(ndx + n, length)]
 
+    #np.random.seed(args.seed)
+    
     # random batching with different N
-    for Ns in [2, 10, 20, 50, 100, 1000, 2500, 5000]:
+    collection = OrderedDict()
+    std_errors = OrderedDict()
+    for Ns in [2, 5, 10, 20, 50, 100, 1000, 2500, 5000, 10000]:
         p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
-        batched_loss = np.mean(
-            [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
-        )
-        print(f"Batched: N={Ns}, loss: {batched_loss.item()}")
+        if Ns == 3:
+            print(len(list(y_test_bs)[-1]))
+                    
+        batched_losses = [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+        batched_loss = np.mean(batched_losses)
+        collection[Ns] = batched_loss
+        std_errors[Ns] = np.std(batched_losses) / np.sqrt(len(batched_losses))
+        print(f"Batched: N={Ns}, loss: {batched_loss.item()}, std: {np.std(batched_losses)}")
+        
     # full
     loss_fx = AURCLoss()
     loss = loss_fx(p_test, y_test)
+    collection[20000] = loss.item()
+    std_errors[20000] = 0
     print(f"Population: loss: {loss.item()}")
+    
+    #plot collection over Ns (with std errors) in plotly
+    
+    import plotly.graph_objects as go
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list(collection.keys()), y=list(collection.values()), name="Batched",  error_y=dict(type='data', array=list(std_errors.values()), visible=True)))
+    fig.add_trace(go.Scatter(x=list(collection.keys()), y=[collection[20000]]*len(collection), mode='lines', line=dict(dash='dash'), name="Population"))
+    fig.update_layout(xaxis_title="N", yaxis_title="AURC")
+    fig.update_layout(xaxis_type="log")
+    fig.update_layout(legend_title_text="Ablation", legend_title_font_color="green")
+    
+    fig.show()
+    
+    
+    # import matplotlib.pyplot as plt
+    # plt.errorbar(list(collection.keys()), list(collection.values()), yerr=list(std_errors.values()), fmt='o')
+    # plt.plot(list(collection.keys()), [collection[20000]]*len(collection), linestyle='--')
+    # plt.xlabel("N")
+    # plt.ylabel("AURC")
+    # plt.show()
 
+    
+    
 
 if __name__ == "__main__":
     # add argparse for N and K
@@ -120,12 +153,16 @@ if __name__ == "__main__":
     parser.add_argument("--N", type=int, default=100)
     parser.add_argument("--K", type=int, default=3)
     parser.add_argument("--real", action="store_true")  # sample from CIFAR (with replacement)
+    parser.add_argument("--seed", type=int, default=42)  # sample from CIFAR (with replacement)
     args = parser.parse_args()
+    np.random.seed(args.seed)
 
     if args.real:
-        (p_test, y_test), _ = load_CIFAR_logits()
+        (p_test, y_test), (p_val, y_val) = load_CIFAR_logits()
+        y_test = np.hstack((y_test, y_val))
+        p_test = np.vstack((p_test, p_val))
         args.K = 10
-        if args.N != len(y_test):  # 10000
+        if args.N != len(y_test):  # 20000
             sub_n = np.random.choice(list(range(len(y_test))), args.N)  # replace =True if larger
             p_test, y_test = p_test[sub_n], y_test[sub_n]
         else:
