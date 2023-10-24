@@ -101,19 +101,28 @@ def test_consistency(p_test, y_test):
 
     #np.random.seed(args.seed)
     
-    # random batching with different N
+    # random batching with different N; now extend to different seeds
     collection = OrderedDict()
     std_errors = OrderedDict()
-    for Ns in [2, 5, 10, 20, 50, 100, 1000, 2500, 5000, 10000]:
-        p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
-        if Ns == 3:
-            print(len(list(y_test_bs)[-1]))
-                    
-        batched_losses = [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
-        batched_loss = np.mean(batched_losses)
-        collection[Ns] = batched_loss
-        std_errors[Ns] = np.std(batched_losses) / np.sqrt(len(batched_losses))
-        print(f"Batched: N={Ns}, loss: {batched_loss.item()}, std: {np.std(batched_losses)}")
+    NN = [2, 5, 10, 20, 50, 100, 1000, 2500, 5000, 10000]
+    for Ns in NN:
+        collection[Ns] = []
+        std_errors[Ns] = []
+        for seed in NN + list(range(20000, 20200)):
+            permutation = np.random.RandomState(seed=seed).permutation(len(y_test))
+            p_test_bs, y_test_bs = p_test[permutation], y_test[permutation]
+            p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
+
+            batched_losses = [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+            batched_loss = np.mean(batched_losses)
+            collection[Ns].append(batched_loss)
+            std_errors[Ns].append(np.std(batched_losses) / np.sqrt(len(batched_losses)))
+            
+        collection[Ns] = np.mean(collection[Ns])
+        std_errors[Ns] = np.mean(std_errors[Ns]) #average std error over seeds
+        
+        print(f"Batched: N={Ns}, loss: {collection[Ns]}, std: {std_errors[Ns]}")
+        
         
     # full
     loss_fx = AURCLoss()
