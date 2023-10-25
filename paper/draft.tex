@@ -14,39 +14,50 @@ Given a multi-class classifier $f: \mathcal{X} \rightarrow \Delta^{k} \times [0,
    =\frac{1}{n} \sum_{h=1}^n \frac{ \sum_{i\neq h} \ell([f(x_i)]_{1:k},y_i) \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]}{ \sum_{i\neq h} \mathbb{I}[f(x_i)_{k+1} > f(x_h)_{k+1}]} = \frac{1}{n} \sum_{i=1}^n \alpha_i \ell([f(x_i)]_{1:k},y_i)
 \end{align}
 
-What is the formula for $\alpha_i$? \\
-$\mathcal{O}(n)$ algorithm for computing all $\alpha_i$ given an index $\{\pi_i\}_{1\leq i\leq n}$ that sorts $\{f(x_i)_{k+1}\}_{1\leq i \leq n}$?
+What is the formula for $\alpha_i$? <TBD> \\
 
+%informal answer: the sum over all losses for samples that are ranked higher than (i), normalized by the rank of i in \pi; but how does its own loss come in? NOT --> maybe it is worthwhile to consider AURC + CE 
 
-\begin{align} % number of samples in between each unique integration point
-    \mathcal{C}_j = %
-    \frac{1}{n-1} 
-    \sum_{\substack{h=1 \\ j \neq h}}^n \mathbb{I}[f(x_h)_{k+1} > f(x_j)_{k+1}] \\ %higher CSF than point j
-    \alpha_i =  \mathcal{C}_{\pi_i} - \mathcal{C}_{\pi_{i+1}}     
-\end{align}
-
+%O(N^2) version with ascending sort
 \begin{align}
-    \frac{1}{n} \sum_{i=1}^{n-1} \frac{\sum_{j=i+1}^n\ell([f(x_{i:n})]_{1:k},y_j)}{(n-i)}
+    \frac{1}{n} \sum_{i=1}^{n-1} \frac{\sum_{j=i+1}^n\ell([f(x_{i:n})]_{1:k},y_j)}{(n-i)}\label{eq:aurcloss_n2}
 \end{align}
 
-\begin{exmp}[simple]\hspace{0.1cm}
-    
-    $f(X)_{k+1}$ = [5, 2, 4]
+$\mathcal{O}(n)$ algorithm for computing all $\alpha_i$ given an index $\{\pi_i\}_{1\leq i\leq n}$ that sorts $\{f(x_i)_{k+1}\}_{1\leq i \leq n}$ in descending order.
 
-    $\ell([f(X)]_{1:k}, Y)$ = [0, 1, 0] 
+%O(N) version with descending sort and assumes zero-based numbering
+\begin{align}
+    \frac{1}{n} \sum_{i=1}^{n} \frac{1}{i} \sum_{j=0}^{i-1}\ell([f(x_{\pi_j})]_{1:k},y_{\pi_j})
+    \label{eq:aurcloss_n}
+\end{align}
 
-    $\pi$ = [1,2,0]
+%if sorted in descending order, then can keep incrementing a partial term containing all losses until i-1; skip first, except for its loss
 
-    
-    
-    
-\end{exmp}
+%version that is very close to the implementation
+
+
+\section*{Updates 25/10}
+
+\begin{itemize}
+    \item $\mathcal{O}(n)$ algorithm implemented and converted to differentiable loss function $\ell_{\mathrm{AURC}}$
+    \item batch approximation to test consistency
+    \item training with $\ell_{\mathrm{AURC}}$ and test effect of different batch sizes
+    \item Literature review on differentiable \AURC TBD
+    \begin{enumerate}
+        \item \cite{cao2022generalizing} close in spirit, dependent on cost, similarly defines it as a $K+1$ classification problem. 
+    \end{enumerate}
+\end{itemize}
+
+
 
 
 \section*{Updates 18/10}
 
-J: as it is implemented in \cite{jaeger2023a}, the alphas/weights denote the number of instances between each contiguous pair of thresholds (in our case based on $f(X)_{k+1}$). 
-If we consider each individual confidence estimate as an integration point, the stepsize between them (i.e. alpha) will be a constant $1/N$. 
+From the alphas, which are individual loss weights, we derived \Cref{eq:aurcloss_n2}, which motivates higher weights for samples that are ranked higher than they should be.
+
+
+% J: as it is implemented in \cite{jaeger2023a}, the alphas/weights denote the number of instances between each contiguous pair of thresholds (in our case based on $f(X)_{k+1}$). 
+% If we consider each individual confidence estimate as an integration point, the stepsize between them (i.e. alpha) will be a constant $1/N$. 
 
 %WRONG: J: Informally, $\alpha_i$ should be a value between 1 and n-1, denoting the number of instances that have higher estimated confidence than  $f(x_i)_{k+1}$. 
 %The most efficient way to obtain is by sorting $f(X)_{k+1}$ in ascending order ( O(nlogn) average case with comparison-based sort such as timsort [default in Python]), then iterate. 
@@ -72,11 +83,6 @@ If we consider each individual confidence estimate as an integration point, the 
 \item Write out alphas like weights (impl) in Definition 3
 \end{todolist}
 
-\section*{Updates }
-
-\subsection{Literature review on differentiable \AURC}
-
-\cite{cao2022generalizing} close in spirit, dependent on cost, similarly defines it as a $K+1$ classification problem. 
 
 % \section{Example \AURC}
 
@@ -87,6 +93,18 @@ If we consider each individual confidence estimate as an integration point, the 
 %     \label{fig:aurc_example}
 % \end{figure}
 
+\begin{exmp}[simple]\hspace{0.1cm}
+    
+    $f(X)_{k+1}$ = [5, 2, 4]
+
+    $\ell([f(X)]_{1:k}, Y)$ = [0, 1, 0] 
+
+    $\pi$ = [1,2,0]
+
+    
+    
+    
+\end{exmp}
 
 
 \newpage

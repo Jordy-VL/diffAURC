@@ -97,4 +97,19 @@ Using AURC as a primary evaluation metric has the following advantages \cite{din
     \item AURC directly shows the cost-performance trade-off in selective prediction which is not visible in the conventional ROC curve or PR curve.
 \end{enumerate}
 
+
+Weights in implementation of Jaeger: 
+\begin{align} % number of samples in between each unique integration point
+    \mathcal{C}_j = %
+    \frac{1}{n-1} 
+    \sum_{\substack{h=1 \\ j \neq h}}^n \mathbb{I}[f(x_h)_{k+1} > f(x_j)_{k+1}] \\ %higher CSF than point j
+    \alpha_i =  \mathcal{C}_{\pi_i} - \mathcal{C}_{\pi_{i+1}}     
+\end{align}
+
+% The loss function you're describing, which sums over the elements of a sorted list, doesn't correspond to a common pre-defined loss function used in machine learning or deep learning. It appears to be a custom loss function tailored to your specific application or problem.
+
+% Common loss functions like mean squared error (MSE), cross-entropy, or various others are well-established and have specific mathematical formulations. However, your loss function involves a unique operation of sorting and then summing elements in a specific way, which is not a standard loss function found in most machine learning libraries.
+
+% It's not unusual to design custom loss functions to suit the specific requirements of a machine learning task. Depending on your task and data, sometimes creating a custom loss function is necessary to optimize the model for your specific objectives. However, when using custom loss functions, you should ensure that they are differentiable if you intend to train your model with gradient-based optimization methods.
+
 \newpage
