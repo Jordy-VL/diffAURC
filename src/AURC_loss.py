@@ -66,7 +66,7 @@ class AURCLoss(torch.nn.Module):
         super(AURCLoss, self).__init__()
         self.g = g
         self.loss_function = loss_function
-
+    
     def forward(self, input, target):
         B = len(target)
         indices_sorted = torch.argsort(self.g(input), descending=True)

@@ -140,12 +140,27 @@ def AURC_naive_alphas_ON(f_X, g, Y):
         partial_loss += int(sorted_f_X[i].argmax(-1) != sorted_y[i])
     return final_sum / N
 
+def AURC_MB_alphas(f_X, g, Y):
+    N = len(Y)
+    indices_sorted = np.argsort(g(f_X))
+    sorted_f_X = f_X[indices_sorted]
+    sorted_y = Y[indices_sorted]
+    losses = sorted_f_X.argmax(-1) != sorted_y
+    alphas = np.zeros(N)
+    for i in range(N):
+        alphas[i] = 0
+        for j in range(0, i):
+            alphas[i] += (1/(N- j -1))
+    print((alphas/N)[-10:] )
+    return np.mean(alphas * losses)
+
 
 IMPLEMENTATIONS = [
     ("geifman", geifman_AURC),
     ("jaeger 2023", official_AURC),
     ("naive", AURC_naive),
     ("naive_alphas", AURC_naive_alphas_ON),
+    ('AURC_MB_alphas', AURC_MB_alphas)
 ]
 
 

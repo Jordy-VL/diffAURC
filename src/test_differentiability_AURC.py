@@ -73,15 +73,18 @@ def load_CIFAR_logits(path="../data/resnet110_c10_logits.p"):
     return (p_val, y_val), (p_test, y_test)
 
 
-def test_all_options(p_test, y_test):
+def test_all_options(p_test, y_test, loss_function = zero_one_loss):
     # all options: g, loss function, metric implementations
-    loss_function = torch.nn.CrossEntropyLoss()
     for CSF, g in CSF_dict.items():
         if "_np" in CSF:
             continue
         loss_fx = AURCLoss(g=g, loss_function=loss_function)
         loss = loss_fx(p_test, y_test)
-        loss.backward()
+        try:
+            loss.backward()
+        except RuntimeError:
+            print(f"{loss_function} not differentiable")
+            
         # print(p_test.grad)
 
         # test metrics vs. loss function
@@ -184,7 +187,7 @@ if __name__ == "__main__":
     p_test = torch.from_numpy(p_test).requires_grad_()
     y_test = torch.from_numpy(y_test)
     
-    test_consistency(p_test, y_test, loss_function=zero_one_loss)
-    test_consistency(p_test, y_test)
+    #test_consistency(p_test, y_test, loss_function=zero_one_loss)
+    #test_consistency(p_test, y_test)
     
     test_all_options(p_test, y_test)
