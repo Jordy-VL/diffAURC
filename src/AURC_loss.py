@@ -49,6 +49,9 @@ CSF_dict = OrderedDict(
 
 ##### differentiable loss #####
 
+def zero_one_loss(input, target):
+    """0-1 loss (inverse)"""
+    return (torch.argmax(input, dim=-1) != target).float().mean()
 
 class AURCLoss(torch.nn.Module):
 
@@ -70,7 +73,7 @@ class AURCLoss(torch.nn.Module):
         sorted_f_X = input[indices_sorted]
         sorted_y = target[indices_sorted]
         final_sum = 0
-        partial_loss = self.loss_function(sorted_f_X[0], sorted_y[0])
+        partial_loss = self.loss_function(sorted_f_X[0], sorted_y[0]) #initialize by largest (often 0 anyway)
         for i in range(1, B):
             final_sum += partial_loss / i
             partial_loss += self.loss_function(sorted_f_X[i], sorted_y[i])

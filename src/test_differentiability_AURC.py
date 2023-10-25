@@ -5,7 +5,7 @@ import pickle
 from sklearn.model_selection import train_test_split
 import torch
 
-from AURC_loss import AURCLoss, CSF_dict
+from AURC_loss import AURCLoss, zero_one_loss, CSF_dict
 from AURC_implementations import IMPLEMENTATIONS, runtime_wrapper
 
 ##### data generation for testing #####
@@ -93,7 +93,7 @@ def test_all_options(p_test, y_test):
             print(f"{CSF}: loss: {loss.item()} vs. {impl.__name__}: {v} taking {round(t,4)}s")
 
 
-def test_consistency(p_test, y_test):
+def test_consistency(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss()):
     def batch(iterable, n=1):
         length = len(iterable)
         for ndx in range(0, length, n):
@@ -101,6 +101,7 @@ def test_consistency(p_test, y_test):
 
     #np.random.seed(args.seed)
     
+    print(f"Testing consistency of AURC loss with risk fx {loss_function} with different batch sizes")
     # random batching with different N; now extend to different seeds
     collection = OrderedDict()
     std_errors = OrderedDict()
@@ -113,7 +114,7 @@ def test_consistency(p_test, y_test):
             p_test_bs, y_test_bs = p_test[permutation], y_test[permutation]
             p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
 
-            batched_losses = [AURCLoss()(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+            batched_losses = [AURCLoss(loss_function=loss_function)(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
             batched_loss = np.mean(batched_losses)
             collection[Ns].append(batched_loss)
             std_errors[Ns].append(np.std(batched_losses) / np.sqrt(len(batched_losses)))
@@ -183,6 +184,7 @@ if __name__ == "__main__":
     p_test = torch.from_numpy(p_test).requires_grad_()
     y_test = torch.from_numpy(y_test)
     
+    test_consistency(p_test, y_test, loss_function=zero_one_loss)
     test_consistency(p_test, y_test)
     
     test_all_options(p_test, y_test)
