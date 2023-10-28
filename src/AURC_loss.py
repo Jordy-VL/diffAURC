@@ -49,9 +49,11 @@ CSF_dict = OrderedDict(
 
 ##### differentiable loss #####
 
+
 def zero_one_loss(input, target):
     """0-1 loss (inverse)"""
     return (torch.argmax(input, dim=-1) != target).float().mean()
+
 
 class AURCLoss(torch.nn.Module):
 
@@ -66,15 +68,37 @@ class AURCLoss(torch.nn.Module):
         super(AURCLoss, self).__init__()
         self.g = g
         self.loss_function = loss_function
-    
+
     def forward(self, input, target):
         B = len(target)
         indices_sorted = torch.argsort(self.g(input), descending=True)
         sorted_f_X = input[indices_sorted]
         sorted_y = target[indices_sorted]
         final_sum = 0
-        partial_loss = self.loss_function(sorted_f_X[0], sorted_y[0]) #initialize by largest (often 0 anyway)
+        partial_loss = self.loss_function(sorted_f_X[0], sorted_y[0])  # initialize by largest (often 0 anyway)
         for i in range(1, B):
             final_sum += partial_loss / i
             partial_loss += self.loss_function(sorted_f_X[i], sorted_y[i])
         return final_sum / B
+
+
+class AlphaAURCLoss(torch.nn.Module):
+
+    """PyTorch version of differentiable AURC (https://arxiv.org/pdf/1805.08206.pdf)
+
+    \operatorname{AURC}(f) := \frac{1}{n} \sum_{i=1}^{n-1} \alpha_i \ell([f(x_{i:n})]_{1:k},y_j)}
+
+    This version has time complexity O(N), yet does not take into account duplicate values in g(f_X)
+    """
+
+    def __init__(self, g=CSF_dict["msp"], loss_function=torch.nn.CrossEntropyLoss()):
+        super(AlphaAURCLoss, self).__init__()
+        self.g = g
+        self.loss_function = loss_function
+
+    def forward(self, input, target):
+        N = len(target)
+        indices_sorted = torch.argsort(self.g(input), descending=False)
+        losses = self.loss_function(input[indices_sorted], target[indices_sorted])
+        alphas = torch.Tensor([-np.log(1 - i / N) for i in range(N)])
+        return torch.mean(alphas * losses)

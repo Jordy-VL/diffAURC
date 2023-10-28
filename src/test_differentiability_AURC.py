@@ -5,7 +5,7 @@ import pickle
 from sklearn.model_selection import train_test_split
 import torch
 
-from AURC_loss import AURCLoss, zero_one_loss, CSF_dict
+from AURC_loss import AlphaAURCLoss, AURCLoss, zero_one_loss, CSF_dict
 from AURC_implementations import IMPLEMENTATIONS, runtime_wrapper
 
 ##### data generation for testing #####
@@ -73,12 +73,12 @@ def load_CIFAR_logits(path="../data/resnet110_c10_logits.p"):
     return (p_val, y_val), (p_test, y_test)
 
 
-def test_all_options(p_test, y_test, loss_function = zero_one_loss):
+def test_all_options(p_test, y_test, loss_function = zero_one_loss, meta_loss=AURCLoss):
     # all options: g, loss function, metric implementations
     for CSF, g in CSF_dict.items():
         if "_np" in CSF:
             continue
-        loss_fx = AURCLoss(g=g, loss_function=loss_function)
+        loss_fx = meta_loss(g=g, loss_function=loss_function)
         loss = loss_fx(p_test, y_test)
         try:
             loss.backward()
@@ -93,10 +93,10 @@ def test_all_options(p_test, y_test, loss_function = zero_one_loss):
                 continue
             g = CSF_dict[CSF + "_np"]
             v, t = runtime_wrapper(impl, p_test.detach().numpy(), g, y_test.numpy())
-            print(f"{CSF}: loss: {loss.item()} vs. {impl.__name__}: {v} taking {round(t,4)}s")
+            print(f"{CSF}: {meta_loss.__name__}: {loss.item()} vs. {impl.__name__}: {v} taking {round(t,4)}s")
 
 
-def test_consistency(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss()):
+def test_consistency(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss(), meta_loss=AURCLoss):
     def batch(iterable, n=1):
         length = len(iterable)
         for ndx in range(0, length, n):
@@ -117,7 +117,7 @@ def test_consistency(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss()):
             p_test_bs, y_test_bs = p_test[permutation], y_test[permutation]
             p_test_bs, y_test_bs = batch(p_test, Ns), batch(y_test, Ns)
 
-            batched_losses = [AURCLoss(loss_function=loss_function)(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
+            batched_losses = [meta_loss(loss_function=loss_function)(p_test_batch, y_test_batch).detach().numpy() for p_test_batch, y_test_batch in zip(p_test_bs, y_test_bs)]
             batched_loss = np.mean(batched_losses)
             collection[Ns].append(batched_loss)
             std_errors[Ns].append(np.std(batched_losses) / np.sqrt(len(batched_losses)))
@@ -128,7 +128,7 @@ def test_consistency(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss()):
         print(f"Batched: N={Ns}, loss: {collection[Ns]}, std: {std_errors[Ns]}")
         
     # full
-    loss_fx = AURCLoss()
+    loss_fx = meta_loss(loss_function=loss_function)
     loss = loss_fx(p_test, y_test)
     collection[20000] = loss.item()
     std_errors[20000] = 0
@@ -190,4 +190,7 @@ if __name__ == "__main__":
     #test_consistency(p_test, y_test, loss_function=zero_one_loss)
     #test_consistency(p_test, y_test)
     
-    test_all_options(p_test, y_test)
+    test_all_options(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss(), meta_loss=AlphaAURCLoss)
+    test_all_options(p_test, y_test, loss_function=zero_one_loss)
+    test_all_options(p_test, y_test, loss_function=zero_one_loss, meta_loss=AlphaAURCLoss)
+    test_all_options(p_test, y_test, loss_function=torch.nn.CrossEntropyLoss())

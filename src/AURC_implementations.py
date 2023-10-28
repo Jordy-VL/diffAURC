@@ -154,13 +154,22 @@ def AURC_MB_alphas(f_X, g, Y):
     print((alphas/N)[-10:] )
     return np.mean(alphas * losses)
 
+def AURC_approx_alphas(f_X, g, Y):
+    N = len(Y)
+    indices_sorted = np.argsort(g(f_X))
+    losses = f_X[indices_sorted].argmax(-1) != Y[indices_sorted]
+    alphas = [-np.log(1 - i/N) for i in range(N)]
+    return np.mean(alphas * losses)
+
+
 
 IMPLEMENTATIONS = [
     ("geifman", geifman_AURC),
     ("jaeger 2023", official_AURC),
     ("naive", AURC_naive),
     ("naive_alphas", AURC_naive_alphas_ON),
-    ('AURC_MB_alphas', AURC_MB_alphas)
+    ('AURC_MB_alphas', AURC_MB_alphas), 
+    ('AURC_approx_alphas', AURC_approx_alphas)
 ]
 
 
