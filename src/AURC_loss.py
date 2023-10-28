@@ -100,5 +100,5 @@ class AlphaAURCLoss(torch.nn.Module):
         N = len(target)
         indices_sorted = torch.argsort(self.g(input), descending=False)
         losses = self.loss_function(input[indices_sorted], target[indices_sorted])
-        alphas = torch.Tensor([-np.log(1 - i / N) for i in range(N)])
+        alphas = torch.Tensor([-np.log(1 - i / N) for i in range(N)], device=losses.device)
         return torch.mean(alphas * losses)
