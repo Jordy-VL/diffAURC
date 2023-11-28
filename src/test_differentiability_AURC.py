@@ -174,7 +174,7 @@ if __name__ == "__main__":
         p_test = np.vstack((p_test, p_val))
         args.K = 10
         if args.N != len(y_test):  # 20000
-            sub_n = np.random.choice(list(range(len(y_test))), args.N)  # replace =True if larger
+            sub_n = np.random.choice(list(range(len(y_test))), args.N) # sample without replacement
             p_test, y_test = p_test[sub_n], y_test[sub_n]
         else:
             args.N = len(y_test)

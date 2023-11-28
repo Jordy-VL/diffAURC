@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "EE"
+name = "diffAURC"
 version = "0.1.0"
 description = "something"
-authors = ["ANON"]
+authors = ["Jordy Van Landeghem <jordy@contract.fit>"]
 
 readme = 'README.md'  # Markdown files are supported
-keywords = ['research', 'evaluation', 'classification', 'documetns']
+keywords = ['research', 'evaluation', 'document classification']
 
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -19,12 +19,13 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = "^1.24.1"
-evaluate = "^0.4.0"
 scikit-learn = "^1.2.0"
-transformers = "^4.26.0"
-pandas = "^1.5.3"
-torch = "^1.13.1"
 pillow = "^9.4.0"
+scipy ="^1.10.0"
+pandas = "^1.5.3"
+plotly = "^5.13.1"
+torch = "^1.13.1"
+evaluate = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.10.1"

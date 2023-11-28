@@ -89,6 +89,7 @@ class AlphaAURCLoss(torch.nn.Module):
     \operatorname{AURC}(f) := \frac{1}{n} \sum_{i=1}^{n-1} \alpha_i \ell([f(x_{i:n})]_{1:k},y_j)}
 
     This version has time complexity O(N), yet does not take into account duplicate values in g(f_X)
+    Additionally, it uses the alpha-based approximation of AURC, which is more stable over batch sizes.
     """
 
     def __init__(self, g=CSF_dict["msp"], loss_function=torch.nn.CrossEntropyLoss()):
@@ -100,5 +101,5 @@ class AlphaAURCLoss(torch.nn.Module):
         N = len(target)
         indices_sorted = torch.argsort(self.g(input), descending=False)
         losses = self.loss_function(input[indices_sorted], target[indices_sorted])
-        alphas = torch.Tensor([-np.log(1 - i / N) for i in range(N)], device=losses.device)
+        alphas = torch.Tensor([-np.log(1 - i / N) for i in range(N)]).to(losses.device)
         return torch.mean(alphas * losses)
